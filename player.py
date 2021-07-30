@@ -1,4 +1,5 @@
 from card import Card
+import random
 
 class Player:
     def __init__(self, player_tag):
@@ -24,8 +25,34 @@ class Player:
         else:
             return "Computer Player " + str(self.player_tag)
 
+    def computer_action(self, driver):
+        '''This method performs an individual computer player action'''
+        #just have it pick a random number to decide the action
+        self.reset_turn = False
+        self.highest_better = False
+        self.folded = False
+        self.is_all_in = False
+        decision = random.randint(0, 3)
+        raise_amount = 0
+        if decision == 0:
+            self.fold(driver)
+        elif decision == 1:
+            self.check_or_call(driver)
+        elif decision == 2:
+            raise_amount = random.randint(driver.current_max_bet - self.bet_amount + 1, self.chip_count - 1)
+            self.raise_bet(driver, raise_amount)
+        elif decision == 3:
+            self.all_in(driver)
+        decision_dict = {
+            0: "Computer Player " + str(self.player_tag) + " folded",
+            1: "Computer Player " + str(self.player_tag) + " check/called",
+            2: "Computer Player " + str(self.player_tag) + " bet " + str(raise_amount) + " chips",
+            3: "Computer Player " + str(self.player_tag) + " has gone all in"
+        }
+        print(decision_dict[decision])
+
     def player_action(self, driver): #make it so you can all in at any time
-        '''This method performs an individual player action'''
+        '''This method performs an individual human player action'''
         decision = -1
         self.reset_turn = False
         self.highest_better = False
@@ -74,7 +101,7 @@ class Player:
             if self.is_all_in == True:
                 self.check_cards(driver)
             else:
-                self.raise_bet(driver)
+                self.raise_bet(driver, computer_raise_amount = 0)
         elif decision == 4:
             if self.is_all_in == True:
                 self.check_chips(driver)
@@ -103,18 +130,21 @@ class Player:
         self.chip_count -= difference
         self.highest_better = True
 
-    def raise_bet(self, driver):
+    def raise_bet(self, driver, computer_raise_amount):
         difference = driver.current_max_bet - self.bet_amount
-        raise_amount = 0
-        while raise_amount <= difference or raise_amount < 0 or raise_amount > self.chip_count:
-            try:
-                print("How much would you like to raise?")
-                raise_amount = int(input("Amount: "))
-                print()
-            except:
-                pass
-            if raise_amount <= difference or raise_amount < 0 or raise_amount > self.chip_count:
-                print("Please enter a valid amount (more than " + str(difference) + ") and below your remaining chip count (" + str(self.chip_count) + ")")
+        raise_amount = computer_raise_amount
+        if self.player_tag == 0:
+            while raise_amount <= difference or raise_amount < 0 or raise_amount > self.chip_count:
+                try:
+                    print("How much would you like to raise?")
+                    raise_amount = int(input("Amount: "))
+                    print()
+                except:
+                    pass
+                if raise_amount <= difference or raise_amount < 0 or raise_amount > self.chip_count:
+                    print("Please enter a valid amount (more than " + str(difference) + ") and below your remaining chip count (" + str(self.chip_count) + ")")
+        else:
+            raise_amount = random.randint(difference + 1, self.chip_count - 1)
         self.bet_amount += raise_amount
         driver.pot += raise_amount
         self.chip_count -= raise_amount
@@ -135,8 +165,6 @@ class Player:
             driver.current_max_bet = self.bet_amount
         elif self.bet_amount == driver.current_max_bet:
             self.highest_better = True
-        print("After all in: " + str(self.chip_count))
-
     def check_cards(self, driver):
         print("Your cards are:")
         for i in self.hand:
@@ -176,8 +204,6 @@ class Player:
             self.hand.append(deck.deal_card())
         if self.player_tag == 0:
             print("You have the following cards:")
-        else: 
-            print("Computer Player " + str(self.player_tag) + " has the following cards:")
         for i in self.hand:
             print(i)
         print()

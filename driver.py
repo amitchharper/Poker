@@ -83,7 +83,7 @@ class Driver:
                 print("Computer Player " + str(winning_player.player_tag) + " won the hand\n")
         else:
             for i in self.players:
-                if i.made_to_end == True and i.player_id != winning_player.player_id:
+                if i.made_to_end == True and i.player_tag != winning_player.player_tag:
                     i.chip_count -= winning_player.bet_amount
 
     def all_players_action(self): #sometimes checking doesn't advance the turn
@@ -94,7 +94,10 @@ class Driver:
             for i in self.players_in_hand:
                 i.reset_turn = True
                 while i.reset_turn == True and i.is_all_in == False:
-                    i.player_action(driver)
+                    if i.player_tag == 0:
+                        i.player_action(driver)
+                    else:
+                        i.computer_action(driver)
                 if i.is_all_in == True:
                     self.players_all_in += 1
                 if i.folded == True:
